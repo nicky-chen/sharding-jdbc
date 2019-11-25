@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -10,6 +11,14 @@
         <module name="sharding-jdbc-config-spring" />
         <module name="sharding-jdbc-config-yaml" />
         <module name="sharding-jdbc-core" />
+        <module name="sharding-jdbc-example-config-spring" />
+        <module name="sharding-jdbc-example-config-spring-masterslave" />
+        <module name="sharding-jdbc-example-config-yaml" />
+        <module name="sharding-jdbc-example-jdbc" />
+        <module name="sharding-jdbc-example-jdbc-masterslave" />
+        <module name="sharding-jdbc-example-jdbc-transaction" />
+        <module name="sharding-jdbc-example-jpa" />
+        <module name="sharding-jdbc-example-mybatis" />
         <module name="sharding-jdbc-transaction" />
         <module name="sharding-jdbc-transaction-async-job" />
         <module name="sharding-jdbc-transaction-storage" />
@@ -22,6 +31,15 @@
       <module name="sharding-jdbc-config-spring" target="1.7" />
       <module name="sharding-jdbc-config-yaml" target="1.7" />
       <module name="sharding-jdbc-core" target="1.7" />
+      <module name="sharding-jdbc-example" target="1.7" />
+      <module name="sharding-jdbc-example-config-spring" target="1.7" />
+      <module name="sharding-jdbc-example-config-spring-masterslave" target="1.7" />
+      <module name="sharding-jdbc-example-config-yaml" target="1.7" />
+      <module name="sharding-jdbc-example-jdbc" target="1.7" />
+      <module name="sharding-jdbc-example-jdbc-masterslave" target="1.7" />
+      <module name="sharding-jdbc-example-jdbc-transaction" target="1.7" />
+      <module name="sharding-jdbc-example-jpa" target="1.7" />
+      <module name="sharding-jdbc-example-mybatis" target="1.7" />
       <module name="sharding-jdbc-transaction" target="1.7" />
       <module name="sharding-jdbc-transaction-async-job" target="1.7" />
       <module name="sharding-jdbc-transaction-parent" target="1.5" />
