@@ -17,39 +17,40 @@
 
 package com.dangdang.ddframe.rdb.sharding.routing;
 
+import java.util.List;
+
 import com.dangdang.ddframe.rdb.sharding.jdbc.core.ShardingContext;
 import com.dangdang.ddframe.rdb.sharding.parsing.parser.statement.SQLStatement;
 import com.dangdang.ddframe.rdb.sharding.routing.router.SQLRouter;
 import com.dangdang.ddframe.rdb.sharding.routing.router.SQLRouterFactory;
 
-import java.util.List;
-
 /**
  * 预解析的SQL路由器.
- * 
+ *
  * @author zhangliang
  */
 public final class PreparedStatementRoutingEngine {
 
-//    逻辑sql
+    //    逻辑sql
     private final String logicSQL;
 
-//sql路由器
+    //sql路由器
     private final SQLRouter sqlRouter;
 
-//    sql语句对象
+    //    sql语句对象
     private SQLStatement sqlStatement;
-    
+
     public PreparedStatementRoutingEngine(final String logicSQL, final ShardingContext shardingContext) {
         this.logicSQL = logicSQL;
         sqlRouter = SQLRouterFactory.createSQLRouter(shardingContext);
     }
-    
+
     /**
      * SQL路由.
      * 当第一次路由时进行SQL解析,之后的路由复用第一次的解析结果.
-     * 
+     *
      * @param parameters SQL中的参数
+     *
      * @return 路由结果
      */
     public SQLRouteResult route(final List<Object> parameters) {//sql路由业务方法

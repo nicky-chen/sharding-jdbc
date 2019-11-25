@@ -19,25 +19,28 @@ package com.dangdang.ddframe.rdb.sharding.routing.router;
 
 import com.dangdang.ddframe.rdb.sharding.hint.HintManagerHolder;
 import com.dangdang.ddframe.rdb.sharding.jdbc.core.ShardingContext;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 /**
  * 路由引擎工厂.
- * 
+ *
  * @author zhangiang
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SQLRouterFactory {
-    
+
     /**
      * 创建SQL路由器.
-     * 
+     *
      * @param shardingContext 数据源运行期上下文
+     *
      * @return SQL路由器
      */
-//    这里是静态工厂方法实现
+    //    这里是静态工厂方法实现
     public static SQLRouter createSQLRouter(final ShardingContext shardingContext) {
-        return HintManagerHolder.isDatabaseShardingOnly() ? new DatabaseHintSQLRouter(shardingContext) : new ParsingSQLRouter(shardingContext);
+        return HintManagerHolder.isDatabaseShardingOnly() ? new DatabaseHintSQLRouter(shardingContext) :
+            new ParsingSQLRouter(shardingContext);
     }
 }

@@ -17,6 +17,19 @@
 
 package com.dangdang.ddframe.rdb.sharding.executor;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import com.dangdang.ddframe.rdb.sharding.constant.SQLType;
 import com.dangdang.ddframe.rdb.sharding.exception.ShardingJdbcException;
 import com.dangdang.ddframe.rdb.sharding.executor.event.AbstractExecutionEvent;
@@ -36,96 +49,93 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import lombok.extern.slf4j.Slf4j;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * SQL执行引擎.
- * 
+ *
  * @author gaohongtao
  * @author zhangliang
  */
 @Slf4j
 public final class ExecutorEngine implements AutoCloseable {
-    
+
     private final ListeningExecutorService executorService;
-    
+
     public ExecutorEngine(final int executorSize) {
-        executorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(
-                executorSize, executorSize, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ShardingJDBC-%d").build()));
+        executorService = MoreExecutors.listeningDecorator(
+            new ThreadPoolExecutor(executorSize, executorSize, 0, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(),
+                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ShardingJDBC-%d").build()));
         MoreExecutors.addDelayedShutdownHook(executorService, 60, TimeUnit.SECONDS);
     }
-    
+
     /**
      * 执行Statement.
      *
-     * @param sqlType SQL类型
-     * @param statementUnits 语句对象执行单元集合
+     * @param sqlType         SQL类型
+     * @param statementUnits  语句对象执行单元集合
      * @param executeCallback 执行回调函数
-     * @param <T> 返回值类型
+     * @param <T>             返回值类型
+     *
      * @return 执行结果
      */
-    public <T> List<T> executeStatement(final SQLType sqlType, final Collection<StatementUnit> statementUnits, final ExecuteCallback<T> executeCallback) {
+    public <T> List<T> executeStatement(final SQLType sqlType, final Collection<StatementUnit> statementUnits,
+        final ExecuteCallback<T> executeCallback) {
         return execute(sqlType, statementUnits, Collections.<List<Object>>emptyList(), executeCallback);
     }
-    
+
     /**
      * 执行PreparedStatement.
      *
-     * @param sqlType SQL类型
+     * @param sqlType                SQL类型
      * @param preparedStatementUnits 语句对象执行单元集合
-     * @param parameters 参数列表
-     * @param executeCallback 执行回调函数
-     * @param <T> 返回值类型
+     * @param parameters             参数列表
+     * @param executeCallback        执行回调函数
+     * @param <T>                    返回值类型
+     *
      * @return 执行结果
      */
-    public <T> List<T> executePreparedStatement(
-            final SQLType sqlType, final Collection<PreparedStatementUnit> preparedStatementUnits, final List<Object> parameters, final ExecuteCallback<T> executeCallback) {
+    public <T> List<T> executePreparedStatement(final SQLType sqlType,
+        final Collection<PreparedStatementUnit> preparedStatementUnits, final List<Object> parameters,
+        final ExecuteCallback<T> executeCallback) {
         return execute(sqlType, preparedStatementUnits, Collections.singletonList(parameters), executeCallback);
     }
-    
+
     /**
      * 执行Batch.
      *
-     * @param sqlType SQL类型
+     * @param sqlType                     SQL类型
      * @param batchPreparedStatementUnits 语句对象执行单元集合
-     * @param parameterSets 参数列表集
-     * @param executeCallback 执行回调函数
+     * @param parameterSets               参数列表集
+     * @param executeCallback             执行回调函数
+     *
      * @return 执行结果
      */
-    public List<int[]> executeBatch(
-            final SQLType sqlType, final Collection<BatchPreparedStatementUnit> batchPreparedStatementUnits, final List<List<Object>> parameterSets, final ExecuteCallback<int[]> executeCallback) {
+    public List<int[]> executeBatch(final SQLType sqlType,
+        final Collection<BatchPreparedStatementUnit> batchPreparedStatementUnits,
+        final List<List<Object>> parameterSets, final ExecuteCallback<int[]> executeCallback) {
         return execute(sqlType, batchPreparedStatementUnits, parameterSets, executeCallback);
     }
-    
-    private  <T> List<T> execute(
-            final SQLType sqlType, final Collection<? extends BaseStatementUnit> baseStatementUnits, final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback) {
+
+    private <T> List<T> execute(final SQLType sqlType, final Collection<? extends BaseStatementUnit> baseStatementUnits,
+        final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback) {
         if (baseStatementUnits.isEmpty()) {
             return Collections.emptyList();
         }
         Iterator<? extends BaseStatementUnit> iterator = baseStatementUnits.iterator();
-//        获得一个sql语句执行单元
+        //        获得一个sql语句执行单元
         BaseStatementUnit firstInput = iterator.next();
-//        异步多线程去执行->
-        ListenableFuture<List<T>> restFutures = asyncExecute(sqlType, Lists.newArrayList(iterator), parameterSets, executeCallback);
+        //        异步多线程去执行->
+        ListenableFuture<List<T>> restFutures =
+            asyncExecute(sqlType, Lists.newArrayList(iterator), parameterSets, executeCallback);
         T firstOutput;
         List<T> restOutputs;
         try {
-//            同步执行->
+            //            同步执行->
             firstOutput = syncExecute(sqlType, firstInput, parameterSets, executeCallback);
-//            获取执行结果
+            //            获取执行结果
             restOutputs = restFutures.get();
             //CHECKSTYLE:OFF
         } catch (final Exception ex) {
@@ -137,18 +147,19 @@ public final class ExecutorEngine implements AutoCloseable {
         result.add(0, firstOutput);
         return result;
     }
-    
-    private <T> ListenableFuture<List<T>> asyncExecute(
-            final SQLType sqlType, final Collection<BaseStatementUnit> baseStatementUnits, final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback) {
+
+    private <T> ListenableFuture<List<T>> asyncExecute(final SQLType sqlType,
+        final Collection<BaseStatementUnit> baseStatementUnits, final List<List<Object>> parameterSets,
+        final ExecuteCallback<T> executeCallback) {
         List<ListenableFuture<T>> result = new ArrayList<>(baseStatementUnits.size());
-//        是否有异常出现
+        //        是否有异常出现
         final boolean isExceptionThrown = ExecutorExceptionHandler.isExceptionThrown();
-//        执行数据是多线程安全的
+        //        执行数据是多线程安全的
         final Map<String, Object> dataMap = ExecutorDataMap.getDataMap();
         for (final BaseStatementUnit each : baseStatementUnits) {
-//            线程分发执行
+            //            线程分发执行
             result.add(executorService.submit(new Callable<T>() {
-                
+
                 @Override
                 public T call() throws Exception {
                     return executeInternal(sqlType, each, parameterSets, executeCallback, isExceptionThrown, dataMap);
@@ -158,36 +169,39 @@ public final class ExecutorEngine implements AutoCloseable {
 
         return Futures.allAsList(result);
     }
-    
-    private <T> T syncExecute(final SQLType sqlType, final BaseStatementUnit baseStatementUnit, final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback) throws Exception {
-        return executeInternal(sqlType, baseStatementUnit, parameterSets, executeCallback, ExecutorExceptionHandler.isExceptionThrown(), ExecutorDataMap.getDataMap());
+
+    private <T> T syncExecute(final SQLType sqlType, final BaseStatementUnit baseStatementUnit,
+        final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback) throws Exception {
+        return executeInternal(sqlType, baseStatementUnit, parameterSets, executeCallback,
+            ExecutorExceptionHandler.isExceptionThrown(), ExecutorDataMap.getDataMap());
     }
-    
-    private <T> T executeInternal(final SQLType sqlType, final BaseStatementUnit baseStatementUnit, final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback, 
-                          final boolean isExceptionThrown, final Map<String, Object> dataMap) throws Exception {
-//        同一个数据源是串行执行的
+
+    private <T> T executeInternal(final SQLType sqlType, final BaseStatementUnit baseStatementUnit,
+        final List<List<Object>> parameterSets, final ExecuteCallback<T> executeCallback,
+        final boolean isExceptionThrown, final Map<String, Object> dataMap) throws Exception {
+        //        同一个数据源是串行执行的
         synchronized (baseStatementUnit.getStatement().getConnection()) {
             T result;
             ExecutorExceptionHandler.setExceptionThrown(isExceptionThrown);
             ExecutorDataMap.setDataMap(dataMap);
             List<AbstractExecutionEvent> events = new LinkedList<>();
             if (parameterSets.isEmpty()) {
-//                添加执行事件-》
+                //                添加执行事件-》
                 events.add(getExecutionEvent(sqlType, baseStatementUnit, Collections.emptyList()));
             }
             for (List<Object> each : parameterSets) {
-//                添加执行事件
+                //                添加执行事件
                 events.add(getExecutionEvent(sqlType, baseStatementUnit, each));
             }
             for (AbstractExecutionEvent event : events) {
-//                这里是事件总线实现，发布事件
+                //                这里是事件总线实现，发布事件
                 EventBusInstance.getInstance().post(event);
             }
             try {
-//                回调函数获取回调结果
+                //                回调函数获取回调结果
                 result = executeCallback.execute(baseStatementUnit);
             } catch (final SQLException ex) {
-//                执行失败，更新事件，发布执行失败的事件
+                //                执行失败，更新事件，发布执行失败的事件
                 for (AbstractExecutionEvent each : events) {
                     each.setEventExecutionType(EventExecutionType.EXECUTE_FAILURE);
                     each.setException(Optional.of(ex));
@@ -197,25 +211,28 @@ public final class ExecutorEngine implements AutoCloseable {
                 return null;
             }
             for (AbstractExecutionEvent each : events) {
-//                执行成功，更新事件内容，发布执行成功事件
+                //                执行成功，更新事件内容，发布执行成功事件
                 each.setEventExecutionType(EventExecutionType.EXECUTE_SUCCESS);
                 EventBusInstance.getInstance().post(each);
             }
             return result;
         }
     }
-    
-    private AbstractExecutionEvent getExecutionEvent(final SQLType sqlType, final BaseStatementUnit baseStatementUnit, final List<Object> parameters) {
+
+    private AbstractExecutionEvent getExecutionEvent(final SQLType sqlType, final BaseStatementUnit baseStatementUnit,
+        final List<Object> parameters) {
         AbstractExecutionEvent result;
         if (SQLType.DQL == sqlType) {
-//            DQL语句
-            result = new DQLExecutionEvent(baseStatementUnit.getSqlExecutionUnit().getDataSource(), baseStatementUnit.getSqlExecutionUnit().getSql(), parameters);
+            //            DQL语句
+            result = new DQLExecutionEvent(baseStatementUnit.getSqlExecutionUnit().getDataSource(),
+                baseStatementUnit.getSqlExecutionUnit().getSql(), parameters);
         } else {
-            result = new DMLExecutionEvent(baseStatementUnit.getSqlExecutionUnit().getDataSource(), baseStatementUnit.getSqlExecutionUnit().getSql(), parameters);
+            result = new DMLExecutionEvent(baseStatementUnit.getSqlExecutionUnit().getDataSource(),
+                baseStatementUnit.getSqlExecutionUnit().getSql(), parameters);
         }
         return result;
     }
-    
+
     @Override
     public void close() {
         executorService.shutdownNow();

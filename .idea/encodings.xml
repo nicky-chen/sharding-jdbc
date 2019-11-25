@@ -7,6 +7,15 @@
     <file url="file://$PROJECT_DIR$/sharding-jdbc-config-parent/sharding-jdbc-config-spring" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/sharding-jdbc-config-parent/sharding-jdbc-config-yaml" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/sharding-jdbc-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-config-spring" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-config-spring-masterslave" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-config-yaml" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-jdbc" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-jdbc-masterslave" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-jdbc-transaction" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-jpa" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sharding-jdbc-example/sharding-jdbc-example-mybatis" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/sharding-jdbc-transaction-parent" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/sharding-jdbc-transaction-parent/sharding-jdbc-transaction" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/sharding-jdbc-transaction-parent/sharding-jdbc-transaction-async-job" charset="UTF-8" />

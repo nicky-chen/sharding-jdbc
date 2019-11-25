@@ -17,33 +17,35 @@
 
 package com.dangdang.ddframe.rdb.sharding.routing.router;
 
+import java.util.List;
+
 import com.dangdang.ddframe.rdb.sharding.parsing.parser.statement.SQLStatement;
 import com.dangdang.ddframe.rdb.sharding.routing.SQLRouteResult;
 
-import java.util.List;
-
 /**
  * SQL路由器.
- * 
+ *
  * @author zhangiang
  */
 public interface SQLRouter {
-    
+
     /**
      * SQL解析.
-     * 
-     * @param logicSQL 逻辑SQL
+     *
+     * @param logicSQL       逻辑SQL
      * @param parametersSize 参数个数
+     *
      * @return 解析结果
      */
     SQLStatement parse(String logicSQL, int parametersSize);
-    
+
     /**
      * SQL路由.
-     * 
-     * @param logicSQL 逻辑SQL
+     *
+     * @param logicSQL     逻辑SQL
      * @param sqlStatement 解析结果
-     * @param parameters 参数
+     * @param parameters   参数
+     *
      * @return 路由结果
      */
     SQLRouteResult route(String logicSQL, List<Object> parameters, SQLStatement sqlStatement);

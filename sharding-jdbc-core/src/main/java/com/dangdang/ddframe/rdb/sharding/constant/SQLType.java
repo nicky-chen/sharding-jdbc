@@ -19,10 +19,12 @@ package com.dangdang.ddframe.rdb.sharding.constant;
 
 /**
  * SQL类型.
- * 
+ *
  * @author zhangliang
  */
 public enum SQLType {
-    
-    DQL, DML, DDL
+
+    DQL,
+    DML,
+    DDL
 }

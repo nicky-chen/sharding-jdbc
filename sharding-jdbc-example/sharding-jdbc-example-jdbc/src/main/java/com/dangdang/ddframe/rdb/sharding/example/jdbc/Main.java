@@ -17,6 +17,23 @@
 
 package com.dangdang.ddframe.rdb.sharding.example.jdbc;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.BasicDataSource;
+
 import com.dangdang.ddframe.rdb.sharding.api.HintManager;
 import com.dangdang.ddframe.rdb.sharding.api.rule.BindingTableRule;
 import com.dangdang.ddframe.rdb.sharding.api.rule.DataSourceRule;
@@ -27,20 +44,11 @@ import com.dangdang.ddframe.rdb.sharding.api.strategy.table.TableShardingStrateg
 import com.dangdang.ddframe.rdb.sharding.example.jdbc.algorithm.ModuloDatabaseShardingAlgorithm;
 import com.dangdang.ddframe.rdb.sharding.example.jdbc.algorithm.ModuloTableShardingAlgorithm;
 import com.dangdang.ddframe.rdb.sharding.jdbc.core.datasource.ShardingDataSource;
-import org.apache.commons.dbcp.BasicDataSource;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class Main {
-    
+
+    private static final String SERVER_PROPERTIES = "/opt/settings/server.properties";
+
     // CHECKSTYLE:OFF
     public static void main(final String[] args) throws SQLException {
     // CHECKSTYLE:ON
@@ -140,10 +148,28 @@ public final class Main {
     private static DataSource createDataSource(final String dataSourceName) {
         BasicDataSource result = new BasicDataSource();
         result.setDriverClassName(com.mysql.jdbc.Driver.class.getName());
-        result.setUrl(String.format("jdbc:mysql://localhost:3306/%s", dataSourceName));
-        result.setUsername("root");
-        result.setPassword("");
+        result.setUrl(String.format("jdbc:mysql://118.25.180.22:33306/%s", dataSourceName));
+        result.setUsername(getProperties().getProperty("username"));
+        result.setPassword(getProperties().getProperty("password"));
         return result;
+    }
+
+    private static Properties getProperties() {
+        File file = new File(SERVER_PROPERTIES);
+        if (file.exists() && file.canRead()) {
+            Properties properties = new Properties();
+            try {
+                properties.load(new FileInputStream(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+            if (!properties.containsKey("password")) {
+                throw new NullPointerException("mysql-pwd error");
+            }
+            return properties;
+        }
+        return null;
     }
     
     private static void dropTable(final DataSource dataSource) throws SQLException {
